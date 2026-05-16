@@ -1,0 +1,25 @@
+@font-face{
+   font-family: 'Old';
+   src: url('fonts/KH-Dot-Kodenmachou-16-Ki.ttf') format('truetype');
+   font-weight: normal;
+   font-style: normal;
+}
+ body {
+   font-family: 'Old';
+    line-height: 2;
+   background-color: #339999;
+   color:white;
+   ;
+ }
+.center table,
+.center div,
+.center p {
+    line-height: 2;
+    margin-right: auto;
+    margin-left: auto;
+}
+a {
+  line-height: 2;
+  color: white;
+  text-decoration:none;
+}
