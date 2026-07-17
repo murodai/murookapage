@@ -1,0 +1,295 @@
+\documentclass[a4paper,final]{amsart}
+\usepackage{mathtools}\mathtoolsset{showonlyrefs,showmanualtags,mathic=true}
+   \usepackage[stixtwo]{fontsetup}
+\usepackage[dvipsnames]{xcolor}
+\usepackage{tikz-cd}
+  \tikzcdset{arrow style=tikz, diagrams={>=stealth}}
+  \usetikzlibrary {arrows.meta}
+\usepackage[marginratio=1:1,scale=.72]{geometry}
+\usepackage{caption}
+  \captionsetup{width={0.75\textwidth}}
+\usepackage{enumitem}
+   \setlist{leftmargin=0pt,itemindent=2em,labelsep=1em}
+\usepackage[breaklinks=true,colorlinks=true,allcolors=black]{hyperref}
+\usepackage{showlabels}
+   \renewcommand{\showlabelfont}{\tt\color{magenta}}
+   \showlabels{bib}
+\usepackage{amsrefs}
+    \renewcommand{\eprint}[1]{\href{https://arxiv.org/abs/#1}{arXiv:#1}}
+\usepackage{microtype}
+\usepackage{tabularray}
+
+\allowdisplaybreaks 
+
+\usepackage{amsthm}
+ \theoremstyle{definition}
+   \newtheorem{definition}{Definition}
+   \newtheorem{example}[definition]{Example}
+ \theoremstyle{plain}
+   \newtheorem{theorem}[definition]{Theorem}
+   \newtheorem{proposition}[definition]{Proposition}
+   \newtheorem{corollary}[definition]{Corollary}
+ \theoremstyle{remark}
+   \newtheorem{remark}[definition]{Remark}
+
+\renewcommand{\qedsymbol}{\(\QED\)}
+
+\DeclareMathOperator{\Hom}{Hom}
+\DeclareMathOperator{\Ker}{Ker}
+\DeclareMathOperator{\Cone}{Cone}
+\DeclareMathOperator{\rk}{rk}
+\DeclareMathOperator{\crk}{crk}
+
+\title{
+Remarks on Poincar\'e duality of matroids
+}
+\author{
+Ryosuke Murooka \\
+}
+\address{Graduate School of Mathematics, Nagoya University, Nagoya, Japan}
+\email{\href{mailto:ryosuke.murooka.c1@math.nagoya-u.ac.jp}{ryosuke.murooka.c1@math.nagoya-u.ac.jp}}
+\date{}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{document}
+\begin{abstract}
+Adiprasito, Huh, and Katz show Poincar\'e duality of matroids using matroidal flips, which are purely combinatorial notions.
+Later, Hsiao, Karu, and Yang investigate the Hodge theory of matroids via star subdivisions, which correspond to blow-ups of toric varieties.
+This is an expository paper reviewing a simple proof of Poincar\'e duality of matroids using their method of star subdivisions and Keel's lemma from algebraic geometry.
+\end{abstract}
+\maketitle
+\section{Introduction}
+Let \(n, r\) be non-negative integers.
+In this paper, a \emph{matroid} \(M\) refers to a loopless matroid of rank \(r+1\) on an \((n+1)\)-set \(E\).
+Write \(\symcal{L}(M)\) for the lattice of flats of \(M\).
+Let \(\bigoplus_{i \in E}\symbf{Z}e_i\) be the free abelian group with \(E\) as its basis.
+Put \(e_S \coloneq\sum_{i \in S}e_i\) for a subset \(S\subset E\), \(N_E\coloneq \bigl(\bigoplus_{i\in E}\symbf{Z}e_i\bigr)/\symbf{Z}e_E\), and \(N_{E,\symbf{R}}\coloneq N_E\otimes_{\symbf{Z}}\symbf{R}\).
+The \emph{Bergman fan} \(\Sigma_M\) of a matroid \(M\) is the pure \(r\)-dimensional unimodular fan 
+\begin{equation}
+\big\{\,\Cone (e_F:F \in\symcal{F}) : \text{\(\symcal{F}\subset \symcal{P}(M)\) is a flag}\,\big\}
+\end{equation}
+in \(N_{E,\symbf{R}}\).
+Here, \(\symcal{P}(M)\coloneq \symcal{L}(M)\setminus \{\emptyset,E\}\), and \(\symcal{F} \subset \symcal{P}(M)\) is called a \emph{flag} if it is linearly ordered with respect to the inclusion relation.
+Associated to \(\Sigma_M\), we can consider the \(n\)-dimensional smooth quasi-projective complex toric variety \(X_{\Sigma_M}\), which is possibly non-compact.
+Then, the \emph{Chow ring} \(A^{\bullet}(M)\) of \(M\) is defined to be the Chow ring \(A^{\bullet}\raisebox{-.25ex}{\big(}X_{\Sigma_M}\raisebox{-.25ex}{\big)}\) of \(X_{\Sigma_M}\).
+Adiprasito, Huh, and Katz show Poincar\'e duality of \(M\) in the following sense.
+\begin{theorem}[{\cite[Theorem 6.19]{AHK_18}}]\label{thm_2}
+For a matroid \(M\) of rank \(r+1\), \(A^{\bullet}(M)\) satisfies Poincar\'e duality of dimension \(r\), i.e., it satisfies
+\begin{enumerate}[label=$\arabic*)$]
+\item there exists a group isomorphism \(\deg\colon A^r(M)\similarrightarrow \symbf{Z}\), called a \emph{degree map},
+\item for every integer \(q > r\), we have \(A^q(M) = 0\), and 
+\item for every integer \(q \leqq r\), the map
+\begin{equation}
+A^{r-q}(M) \to \Hom(A^q(M),\symbf{Z});\quad x \mapsto \big(y \mapsto\deg(xy)\big)
+\end{equation}
+is a group isomorphism, i.e., the multiplication \(A^q(M)\times A^{r-q}(M) \to A^r(M)\similarrightarrow \symbf{Z}\) is a perfect pairing.
+\end{enumerate}
+\end{theorem}
+The key concepts of their proof are matroidal flips, which are purely combinatorial technical notions.
+On the other hand, motivated by \cite{BHMPBW_22}, Hsiao, Karu, and Yang \cite{HKY_26} calculate mixed volumes of matroids using the deletion of matroids.
+For their computation, they utilize the following important fact.
+For a non-coloop \(a\in E\) of \(M\) and the deletion \(M\backslash a\), the projection \(\pi\colon N_E \to N_{E\setminus\{a\}}\) naturally induces a morphism of fans \(\pi\colon \Sigma_M \to \Sigma_{M\backslash a}\), and this morphism factors as
+\begin{equation}\label{eq_1}\tag{$\clubsuit$}
+\begin{tikzcd}[column sep =3em]
+\Sigma_M = \Sigma_{m} \arrow[r,"\pi_{m}"] & \Sigma_{m-1} \arrow[r,"\pi_{m-1}"]& \cdots \arrow[r,"\pi_{2}"]& \Sigma_{1} \arrow[r,"\pi_{1}"]& \Sigma_0 \arrow[r,"\pi_0"]& \Sigma_{M\backslash a},
+\end{tikzcd}
+\end{equation}
+where the morphism \(\pi_0\colon \Sigma_0\to \Sigma_{M\backslash a}\) is induced by the projection \(\pi\colon N_E \to N_{E\setminus\{a\}}\), \(\pi_i\colon \Sigma_{i} \to \Sigma_{i-1}\) is induced by the identity map, and \(\Sigma_i\) is a star subdivision of \(\Sigma_{i-1}\) at a 2-dimensional unimodular cone for each \(i=1,\dotsc,m\).
+Using the factorization \eqref{eq_1}, Hsiao \cite{Hsiao_25} gives a simpler combinatorial proof that \(A^{\bullet}(M)\otimes_{\symbf{Z}}\symbf{R}\) satisfies the hard Lefschetz property, the Hodge-Riemann relations, and therefore Poincar\'e duality.
+We note that Amini and Piquerez \cite[Section 1.9]{AP_23} also sketched a similar proof of these properties for matroids via star subdivisions, relying on the weak factorization theorem for tropical fans.
+In \S \ref{sec_1}, we will give a proof of Theorem \ref{thm_2} in the language of algebraic geometry using \eqref{eq_1} and Keel's lemma.
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Keel's lemma}\label{sec_2}
+In this section, we recall an algebro-geometric lemma, which is known as Keel's lemma.
+\begin{theorem}[Keel's lemma, cf.\ {\cite[Appendix, Theorem 1]{Keel_92}}]\label{thm_1}
+Let \(X\) be a smooth variety, \(i\colon Z\hookrightarrow X\) a smooth closed subvariety of codimension \(z\), \(\pi\colon \widetilde{X}\to X\) the blow-up of \(X\) along \(Z\), and \(E\) the exceptional divisor, that is, we consider the pullback diagram
+\begin{equation}
+\begin{tikzcd}
+E \arrow[r,hook]\arrow[d]\arrow[rd,phantom,"\pullback",very near start]& \widetilde{X}\arrow[d,"\pi"]\\
+Z\arrow[r,hook,"i"'] & X.
+\end{tikzcd}
+\end{equation}
+If the pullback map \(i^*\colon A^{\bullet}(X) \to A^{\bullet}(Z)\) is surjective, then the map \(\pi^*\colon A^{\bullet}(X)[T]\to A^{\bullet}(\widetilde{X});\ T\mapsto -[E]\) induces an isomorphism 
+\begin{equation}
+\begin{tikzcd}
+\displaystyle \frac{A^{\bullet}(X)[T]}{(P(T), T\cdot \Ker i^*)} \arrow[r,"\text{\large$\sim$}" yshift=-.3ex]& A^{\bullet}(\widetilde{X})
+\end{tikzcd}
+\end{equation}
+where \(P(T) \in A^{\bullet}(X)[T]\) is a monic polynomial of degree \(z\).
+In particular, we have a decomposition
+\begin{equation}\label{eq_2}\tag{$\diamondsuit$}
+A^q(\widetilde{X}) = A^q(X)\oplus [E]\cdot A^{q-1}(Z) \oplus\dotsb\oplus [E]^{z-1}\cdot A^{q-z+1}(Z)
+\end{equation}
+for all \(q\), where we embed \(\pi^*\colon A^{\bullet}(X) \hookrightarrow A^{\bullet}(\widetilde{X})\), and for all positive integers \(p,q\), 
+\begin{equation}
+\begin{tikzcd}[column sep = 4em]
+A^{q-p}(Z)\arrow[r,"(i^*)^{-1}"',"\text{\large$\sim$}" yshift=-.3ex]& A^{q-p}(X)/\Ker i^* \arrow[r,hook,"{[E]^p\cdot(-)}"']& A^{q}(\widetilde{X}).
+\end{tikzcd}
+\end{equation}
+\end{theorem}
+Now we go back to our toric case.
+Let \(\Sigma\) be a unimodular fan in \(N_{E,\symbf{R}}\).
+For a \(z\)-dimensional cone \(\sigma \in \Sigma\), let \(\Sigma_{\sigma}\) denote the star fan of \(\Sigma\) at \(\sigma\), and let \(\Sigma^*(\sigma)\) denote the star subdivision of \(\Sigma\) at \(\sigma\).
+The orbit closure \(V(\sigma)\) associated to \(\sigma\) is the smooth toric subvariety \(X_{\Sigma_{\sigma}}\) of codimension \(z\), and \(\pi\colon X_{\Sigma^*(\sigma)}\to X_{\Sigma}\) is the blow-up of \(X_{\Sigma}\) along \(V(\sigma)\).
+Since the ring \(A^{\bullet}(X_{\Sigma})\) is generated by the classes of torus-invariant divisors, the pullback homomorphism \(A^{\bullet}(X_{\Sigma}) \to A^{\bullet}\big(X_{\Sigma_{\sigma}}\big)\) is always surjective, so the assumption of Theorem \ref{thm_1} is satisfied if we substitute \(X=X_{\Sigma}\), \(Z=V(\sigma)=X_{\Sigma_{\sigma}}\), \(\widetilde{X}=X_{\Sigma^*(\sigma)}\).
+We also note that the \(q\)-th degree part \(A^q(X_{\Sigma})\) is a finitely generated abelian group.
+\begin{corollary}\label{cor_1}
+We further assume that \(A^{\bullet}(X_{\Sigma})\) and \(A^{\bullet}\big(X_{\Sigma_{\sigma}}\big)\) satisfy Poincar\'e duality of dimension \(r\) and \(r-z\) respectively.
+Then \(A^{\bullet}\big(X_{\Sigma^*(\sigma)}\big)\) satisfies Poincar\'e duality of dimension \(r\).
+\end{corollary}
+\begin{proof}
+The decomposition \eqref{eq_2} tells us that \(A^r\big(X_{\Sigma^*(\sigma)}\big)\cong \symbf{Z}\) and \(A^q\big(X_{\Sigma^*(\sigma)}\big)=0\) for each \(q>r\).
+By Poincar\'e duality of \(A^{\bullet}(X)\) and \(A^{\bullet}(Z)\), each summand of \eqref{eq_2} is a finitely generated free abelian group.
+With an apropriately ordered basis chosen from each summand, the representation matrix of the bilinear pairing \(A^q\big(X_{\Sigma^*(\sigma)}\big)\times A^{r-q}\big(X_{\Sigma^*(\sigma)}\big)\to \symbf{Z}\) is a block lower triangular matrix 
+\begin{equation}
+\begin{bmatrix}
+P_0 & O & \cdots &\cdots &O \\
+O& P_1& \ddots& \ddots& \vdots \\
+\vdots& \ast& \ddots & \ddots & \vdots\\
+\vdots& \vdots& \ddots & \ddots & O\\
+O&\ast&\ast&\ast&P_{z-1}
+\end{bmatrix}.
+\end{equation}
+Poincar\'e duality of \(A^{\bullet}(X_{\Sigma})\) and \(A^{\bullet}(X_{\Sigma_{\sigma}})\) imply that \(\det P_q = \pm 1\) for all \(q=0,1,\dotsc,z-1\), and therefore the above representation matrix has determinant \(\pm 1\).
+\end{proof}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\clearpage
+\section{A proof of Poincar\'e duality by star subdivisions}\label{sec_1}
+In this section, we prove Theorem \ref{thm_2} by induction on \(n\).  Before starting the proof, we recall the definition of a coloop.
+\begin{definition}
+An element \(a\in E\) is called a \emph{coloop} of \(M\) if the subset \(E\setminus\{a\}\) is a flat of \(M\), or equivalently, \(\dim \Sigma_{M\backslash a}< \dim \Sigma_M\).
+\end{definition}
+If all elements of \(E\) are coloops of \(M\), then \(M\) must be the Boolean matroid on \(E\).
+The toric variety \(X_{\Sigma_M}\) is a smooth projective complex variety of dimension \(r=n\).
+By the Jurkiewicz-Danilov theorem, the cycle map \(A^{\bullet}(X_{\Sigma_M})\to H^{2\bullet}(X_{\Sigma_M},\symbf{Z})\) is an isomorphism, and thus Poincar\'e duality of \(A^{\bullet}(M)\) follows in the usual sense.
+In particular, this establishes the statement for \(n=0\).
+
+We assume that \(n>0\) and there exists a non-coloop \(a\in E\) of \(M\).
+If the singleton \(\{a\}\) is not a flat of \(M\), then the deletion map \(d\colon \symcal{L}(M) \to \symcal{L}(M\backslash a);\ F \mapsto F\setminus\{a\}\) is bijective, and \(\Sigma_M \subset (e_a-e_b)^{\perp}\) for some element \(b\) parallel to \(a\).
+This implies that  \(X_{\Sigma_M}\cong X_{\Sigma_{M\backslash a}}\times \symbf{G}_{\symrm{m}}\), and hence \(A^{\bullet}(M)\cong A^{\bullet}(M\backslash a)\), where the right-hand side satisfies Poincar\'e duality of dimension \(r\) by the inductive hypothesis.
+Hence we may assume that \(\{a\}\) is a flat of \(M\).
+Now we construct the factorization \eqref{eq_1}.
+Logically, the set \(\symcal{P}(M)\) can be partitioned into four disjoint subsets
+\begin{align}
+\symcal{P}(M) &=\big\{\,F:a \not\in F,\ F \cup\{a\}\in\symcal{P}(M)\,\big\}\sqcup\big\{\,F: a\not\in F,\ F \cup \{a\} \not\in \symcal{P}(M)\,\big\}\\
+&\hspace{11em}\sqcup\big\{\,F: a\in F,\ F \setminus\{a\} \in \symcal{P}(M)\,\big\}\sqcup\big\{\,F: a\in F,\ F \setminus \{a\} \not\in \symcal{P}(M)\,\big\}\\
+&\eqcolon \symcal{P}_1\sqcup\symcal{P}_2\sqcup\symcal{P}_3\sqcup\symcal{P}_4.
+\end{align}
+Under the deletion map \(d\colon \symcal{P}(M)\to \symcal{P}(M\backslash a)\), we have
+\[
+\symcal{P}(M\backslash a)=\symcal{P}_1\sqcup \symcal{P}_2 \sqcup d(\symcal{P}_4),\qquad d(\symcal{P}_3)\subset \symcal{P}_1,\qquad \symcal{P}(M/a)=d(\symcal{P}_3)\sqcup d(\symcal{P}_4).
+\]
+Consider the inverse map \(d^{-1}\colon \symcal{P}(M\backslash a)\to \symcal{P}(M)\setminus \symcal{P}_3\).
+We construct a fan \(\Sigma_0\) in \(N_{E,\symbf{R}}\) by
+\begin{align}
+&\Sigma_0\coloneq \big\{\,\Cone(e_{d^{-1}(F)}:F \in \symcal{F}): \symcal{F}\underset{\text{flag}}{\subset}\symcal{P}(M\backslash a)\,\big\}\\
+&\hspace{12em}\cup \big\{\,\Cone(e_{d^{-1}(F)}:F \in \symcal{F})+\Cone (e_a):\symcal{F}\underset{\text{flag}}{\subset} \symcal{P}(M/a)\,\big\}
+\end{align}
+(the latter cones are intended to recover the rays associated to \(\symcal{P}_3\)).
+Observing that \(\Sigma_0\) has exactly one more ray than \(\Sigma_{M\backslash a}\) \big(the ray is \(\Cone(e_a)\)\big), one can show that the projection \(\pi_0\colon\Sigma_0 \to \Sigma_{M\backslash a}\) induces an isomorphism \(\pi_0^*\colon A^{\bullet}(M\backslash a) \similarrightarrow A^{\bullet}(X_{\Sigma_0})\).
+We order the flats \(d(\symcal{P}_3)=\{F_1, F_2,\dotsc, F_m\}\) so that \(F_i\subset F_j\) implies that \(i \leqq j\).
+Recall that, since \(d(\symcal{P}_3)\subset \symcal{P}_1\), we have \(d^{-1}(F_i)=F_i\) for all \(i\), and hence \(\Cone(e_a,e_{F_i})\in \Sigma_0\) for all \(i\).
+Let \(\Sigma_1\) be the star subdivision of \(\Sigma_0\) at \(\Cone(e_{F_m},e_a)\).
+\(\Sigma_1\) has an extra ray \(\Cone(e_{F_{m}\cup\{a\}})\), and all new cones arising from this subdivision are of the form
+\begin{align}
+\Cone (e_{d^{-1}(F)}: F \in \symcal{F})+\Cone (e_{F_m\cup\{a\}}) &\quad \text{where \(\symcal{F}\) is a flag of \(\symcal{P}(M/a)\), or}\\
+\Cone (e_{d^{-1}(F)}: F \in \symcal{F})+\Cone(e_a)+\Cone (e_{F_m\cup\{a\}}) &\quad \text{where \(\symcal{F}\) is a flag of \(\symcal{P}(M/a)\setminus\{F_m\}\).}
+\end{align}
+The cones of the former form are already cones of \(\Sigma_M\).
+By recursively constructing the star subdivision \(\Sigma_{i+1}\) of \(\Sigma_i\) at \(\Cone(e_{F_{m-i}},e_a)\) for each \(i=1,\dotsc,m-1\), we obtain \(\Sigma_{m}=\Sigma_M\) and the desired factorization 
+\begin{equation}\tag{$\clubsuit$}
+\begin{tikzcd}[column sep =3em]
+\Sigma_M = \Sigma_{m} \arrow[r,"\pi_{m}"] & \Sigma_{m-1} \arrow[r,"\pi_{m-1}"]& \cdots \arrow[r,"\pi_{2}"]& \Sigma_{1} \arrow[r,"\pi_{1}"]& \Sigma_0 \arrow[r,"\pi_0"]& \Sigma_{M\backslash a}.
+\end{tikzcd}
+\end{equation}
+
+Finally, the star fan of \(\Sigma_i\) at \(\Cone(e_{F_{m-i}},e_a)\) is isomorphic to the product \(\Sigma_{[\emptyset,F_{m-i}]}\times \Sigma_{[F_{m-i}\cup\{a\},E]}\), where \([\emptyset,F_{m-i}]\) denotes the restriction of \(M\) to \(F_{m-i}\) and \([F_{m-i}\cup\{a\},E]\) denotes the contraction of \(M\) by \(F_{m-i}\cup\{a\}\).
+This implies that its Chow ring is isomorphic to \(A^{\bullet}([\emptyset,F_{m-i}])\otimes A^{\bullet}([F_{m-i}\cup\{a\},E])\), which satisfies Poincar\'e duality of dimension \((\rk_M(F_{m-i})-1)+(\crk_M(F_{m-i}\cup\{a\})-1)=r-2\) by the inductive hypothesis.
+Applying Corollary \ref{cor_1} with \(z=2\), we conclude that \(A^{\bullet}(M)\) satisfies Poincar\'e duality of dimension \(r\).
+\qed
+%%%%%%%%%%%%%%%%%%
+\clearpage
+
+We give some remarks of the proof.
+\begin{remark}
+If we subdivide \(\Sigma_0\) at \(\Cone(e_{F_1},e_a)\), the resultant fan differs from \(\Sigma_M\).
+For instance, when \(F_1\subset F_2\), \(\Cone(e_{F_1},e_{F_2},e_a)\) is divided into \(\Cone(e_{F_1\cup\{a\}},e_{F_2},e_a)\) and \(\Cone(e_{F_1\cup\{a\}},e_{F_1},e_{F_2})\).
+The former has a face \(\Cone(e_{F_1\cup\{a\}},e_{F_2})\), which remains in the final fan and is not a cone of Bergman fan.
+\end{remark}
+\begin{remark}
+In the language of tropical geometry, the fan \(\Sigma_0\) is known as the tropical modification of the tropical fan \(\Sigma_{M\backslash a}\) along the tropical divisor \(\Sigma_{M/a}\) with respect to a suitable piecewise linear function on \(\Sigma_{M\backslash a}\).
+Then the isomorphism \(\pi^*\colon A^{\bullet}(M\backslash a)\to A^{\bullet}(X_{\Sigma_0})\) follows from \cite[Theorem 6.4]{AP_23}.
+\end{remark}
+\begin{remark}
+Amini and Piquerez \cite[Theorem 7.9]{AP_23} show that \(X_{\Sigma_M}\) and \(X_{\Sigma_0}\) can be connected by a finite sequence of toric blowups and blowdowns (weak factorization for tropical fans).
+Therefore, the sequence \(\Sigma_m \to \Sigma_{m-1} \to \dotsb \to \Sigma_0\) in \eqref{eq_1} provides a concrete example of this theorem for matroids.
+Furthermore, it shows that \(X_{\Sigma_M}\) can be obtained from \(X_{\Sigma_0}\) by a finite sequence of blowups.
+\end{remark}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section*{Acknowledgements}
+The author is grateful to his advisor, Yusuke Nakamura, for steady guidance and numerous insightful comments.
+The author would like to express his sincere gratitude to Masahiko Yoshinaga for giving him helpful comments to improve the proof of Poincar\'e duality of matroids.
+The author would also like to thank Kosuke Mizuno and Kentaro Tanaka for informative comments.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{bibdiv}
+\begin{biblist}
+\bib{AHK_18}{article}{
+   title={Hodge theory for combinatorial geometries},
+   author={Adiprasito, Karim},
+   author={Huh, June},
+   author={Katz, Eric},
+   journal={Ann.\ Math.\ (2)},
+   date={2018},
+   volume={188},
+   number={2},
+   pages={381--452},
+   note={\href{https://doi.org/10.4007/annals.2018.188.2.1}{DOI 10.4007/annals.2018.188.2.1}},
+}
+\bib{AP_23}{article}{
+  author={Amini, Omid},
+  author={Piquerez, Matthieu},
+  title={Hodge theory for tropical fans},
+  date={2023},
+  eprint={2310.15367v1},
+  status={to appear in Bull. Soc. Math. France},
+}
+\bib{BHMPBW_22}{article}{
+   title={A semi-small decomposition of the Chow ring of a matroid},
+   author={Braden, Tom},
+   author={Huh, June},
+   author={Matherne, Jacob P.},
+   author={Proudfoot, Nicholas},
+   author={Wang, Botong},
+   journal={Adv.\ Math.},
+   date={2022},
+   volume={409},
+   pages={Article 108646},
+   note={\href{https://doi.org/10.1016/j.aim.2022.108646}{DOI 10.1016/j.aim.2022.108646}},
+}
+\bib{Hsiao_25}{article}{
+   title={Hodge theory of matroids by star subdivisions},
+   author={Hsiao, Andy},
+   date={2025},
+   eprint={2509.10909v1},
+   status={preprint},
+}
+\bib{HKY_26}{article}{
+   title={Mixed Volumes of Matroids},
+   author={Hsiao, Andy},
+   author={Karu, Kalle},
+   author={Yang, Jonathan},
+   journal={Discrete Comput.\ Geom.},
+   date={2026},
+   note={\href{https://doi.org/10.1007/s00454-026-00832-y}{DOI 10.1007/s00454-026-00832-y}},
+}
+\bib{Keel_92}{article}{
+   title={Intersection theory of moduli space of stable \(n\)-pointed curves of genus zero},
+   author={Keel, Sean},
+   date={1992},
+   journal={Trans.\ Amer.\ Math.\ Soc.},
+   volume={330},
+   pages={545--574},
+   note={\href{https://doi.org/10.1090/S0002-9947-1992-1034665-0}{DOI 10.1090/S0002-9947-1992-1034665-0}},
+}
+\end{biblist}
+\end{bibdiv}
+\end{document}
