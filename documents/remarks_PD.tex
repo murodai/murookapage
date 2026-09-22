@@ -1,11 +1,14 @@
-\documentclass[a4paper,final]{amsart}
+\documentclass[a4paper,final,oneside]{amsart}
 \usepackage{mathtools}\mathtoolsset{showonlyrefs,showmanualtags,mathic=true}
    \usepackage[stixtwo]{fontsetup}
+%\usepackage{unicode-math}
+%\setmainfont{texgyretermes}
+%\setmathfont{texgyretermes-math.otf}
 \usepackage[dvipsnames]{xcolor}
 \usepackage{tikz-cd}
   \tikzcdset{arrow style=tikz, diagrams={>=stealth}}
   \usetikzlibrary {arrows.meta}
-\usepackage[marginratio=1:1,scale=.72]{geometry}
+\usepackage[margin=1in]{geometry}
 \usepackage{caption}
   \captionsetup{width={0.75\textwidth}}
 \usepackage{enumitem}
@@ -52,9 +55,10 @@ Ryosuke Murooka \\
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{document}
 \begin{abstract}
-Adiprasito, Huh, and Katz show Poincar\'e duality of matroids using matroidal flips, which are purely combinatorial notions.
-Later, Hsiao, Karu, and Yang investigate the Hodge theory of matroids via star subdivisions, which correspond to blow-ups of toric varieties.
-This is an expository paper reviewing a simple proof of Poincar\'e duality of matroids using their method of star subdivisions and Keel's lemma from algebraic geometry.
+Adiprasito, Huh, and Katz show the K\"ahler package for matroids using matroidal flips, which are purely combinatorial notions.
+Following their work, Amini and Piquerez give a new proof of the K\"ahler package, more generally for quasi-projective unimodular Bergman fans using Keel's lemma and the weak factorization theorem for smooth toric varieties.
+Later, in the matroid case, Hsiao shows that the weak factorization step can be replaced by an explicit sequence of toric blow-ups (i.e., star subdivisions of unimodular fans).
+This is an expository paper reviewing a simple proof of Poincar\'e duality for matroids using this sequence of star subdivisions and Keel's lemma from algebraic geometry.
 \end{abstract}
 \maketitle
 \section{Introduction}
@@ -71,7 +75,7 @@ in \(N_{E,\symbf{R}}\).
 Here, \(\symcal{P}(M)\coloneq \symcal{L}(M)\setminus \{\emptyset,E\}\), and \(\symcal{F} \subset \symcal{P}(M)\) is called a \emph{flag} if it is linearly ordered with respect to the inclusion relation.
 Associated to \(\Sigma_M\), we can consider the \(n\)-dimensional smooth quasi-projective complex toric variety \(X_{\Sigma_M}\), which is possibly non-compact.
 Then, the \emph{Chow ring} \(A^{\bullet}(M)\) of \(M\) is defined to be the Chow ring \(A^{\bullet}\raisebox{-.25ex}{\big(}X_{\Sigma_M}\raisebox{-.25ex}{\big)}\) of \(X_{\Sigma_M}\).
-Adiprasito, Huh, and Katz show Poincar\'e duality of \(M\) in the following sense.
+Adiprasito, Huh, and Katz show Poincar\'e duality of \(M\), which is part of the K\"ahler package, in the following sense.
 \begin{theorem}[{\cite[Theorem 6.19]{AHK_18}}]\label{thm_2}
 For a matroid \(M\) of rank \(r+1\), \(A^{\bullet}(M)\) satisfies Poincar\'e duality of dimension \(r\), i.e., it satisfies
 \begin{enumerate}[label=$\arabic*)$]
@@ -85,7 +89,10 @@ is a group isomorphism, i.e., the multiplication \(A^q(M)\times A^{r-q}(M) \to A
 \end{enumerate}
 \end{theorem}
 The key concepts of their proof are matroidal flips, which are purely combinatorial technical notions.
-On the other hand, motivated by \cite{BHMPBW_22}, Hsiao, Karu, and Yang \cite{HKY_26} calculate mixed volumes of matroids using the deletion of matroids.
+Amini and Piquerez \cite[Section 3]{AP_20} develop a new approach to the K\"ahler package, more generally for quasi-projective unimodular Bergman fans, using tropical modifications, Keel's lemma, and the weak factorization theorem for smooth toric varieties.
+See also \cite[Section 1.9]{AP_23} for a later account of this argument.
+In the matroid case, the weak factorization step can be replaced by an explicit sequence of toric blow-ups.
+Motivated by \cite{BHMPBW_22}, Hsiao, Karu, and Yang \cite{HKY_26} calculate mixed volumes of matroids using the deletion of matroids.
 For their computation, they utilize the following important fact.
 For a non-coloop \(a\in E\) of \(M\) and the deletion \(M\backslash a\), the projection \(\pi\colon N_E \to N_{E\setminus\{a\}}\) naturally induces a morphism of fans \(\pi\colon \Sigma_M \to \Sigma_{M\backslash a}\), and this morphism factors as
 \begin{equation}\label{eq_1}\tag{$\clubsuit$}
@@ -94,8 +101,7 @@ For a non-coloop \(a\in E\) of \(M\) and the deletion \(M\backslash a\), the pro
 \end{tikzcd}
 \end{equation}
 where the morphism \(\pi_0\colon \Sigma_0\to \Sigma_{M\backslash a}\) is induced by the projection \(\pi\colon N_E \to N_{E\setminus\{a\}}\), \(\pi_i\colon \Sigma_{i} \to \Sigma_{i-1}\) is induced by the identity map, and \(\Sigma_i\) is a star subdivision of \(\Sigma_{i-1}\) at a 2-dimensional unimodular cone for each \(i=1,\dotsc,m\).
-Using the factorization \eqref{eq_1}, Hsiao \cite{Hsiao_25} gives a simpler combinatorial proof that \(A^{\bullet}(M)\otimes_{\symbf{Z}}\symbf{R}\) satisfies the hard Lefschetz property, the Hodge-Riemann relations, and therefore Poincar\'e duality.
-We note that Amini and Piquerez \cite[Section 1.9]{AP_23} also sketched a similar proof of these properties for matroids via star subdivisions, relying on the weak factorization theorem for tropical fans.
+Using the factorization \eqref{eq_1}, Hsiao \cite{Hsiao_25} gives a simple combinatorial proof that \(A^{\bullet}(M)\otimes_{\symbf{Z}}\symbf{R}\) satisfies the hard Lefschetz property, the Hodge-Riemann relations, and therefore Poincar\'e duality.
 In \S \ref{sec_1}, we will give a proof of Theorem \ref{thm_2} in the language of algebraic geometry using \eqref{eq_1} and Keel's lemma.
 %%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Keel's lemma}\label{sec_2}
@@ -139,7 +145,7 @@ Then \(A^{\bullet}\big(X_{\Sigma^*(\sigma)}\big)\) satisfies Poincar\'e duality 
 \begin{proof}
 The decomposition \eqref{eq_2} tells us that \(A^r\big(X_{\Sigma^*(\sigma)}\big)\cong \symbf{Z}\) and \(A^q\big(X_{\Sigma^*(\sigma)}\big)=0\) for each \(q>r\).
 By Poincar\'e duality of \(A^{\bullet}(X)\) and \(A^{\bullet}(Z)\), each summand of \eqref{eq_2} is a finitely generated free abelian group.
-With an apropriately ordered basis chosen from each summand, the representation matrix of the bilinear pairing \(A^q\big(X_{\Sigma^*(\sigma)}\big)\times A^{r-q}\big(X_{\Sigma^*(\sigma)}\big)\to \symbf{Z}\) is a block lower triangular matrix 
+With an aproopriately ordered basis chosen from each summand, the representation matrix of the bilinear pairing \(A^q\big(X_{\Sigma^*(\sigma)}\big)\times A^{r-q}\big(X_{\Sigma^*(\sigma)}\big)\to \symbf{Z}\) is a block lower triangular matrix 
 \begin{equation}
 \begin{bmatrix}
 P_0 & O & \cdots &\cdots &O \\
@@ -219,11 +225,6 @@ The former has a face \(\Cone(e_{F_1\cup\{a\}},e_{F_2})\), which remains in the 
 In the language of tropical geometry, the fan \(\Sigma_0\) is known as the tropical modification of the tropical fan \(\Sigma_{M\backslash a}\) along the tropical divisor \(\Sigma_{M/a}\) with respect to a suitable piecewise linear function on \(\Sigma_{M\backslash a}\).
 Then the isomorphism \(\pi^*\colon A^{\bullet}(M\backslash a)\to A^{\bullet}(X_{\Sigma_0})\) follows from \cite[Theorem 6.4]{AP_23}.
 \end{remark}
-\begin{remark}
-Amini and Piquerez \cite[Theorem 7.9]{AP_23} show that \(X_{\Sigma_M}\) and \(X_{\Sigma_0}\) can be connected by a finite sequence of toric blowups and blowdowns (weak factorization for tropical fans).
-Therefore, the sequence \(\Sigma_m \to \Sigma_{m-1} \to \dotsb \to \Sigma_0\) in \eqref{eq_1} provides a concrete example of this theorem for matroids.
-Furthermore, it shows that \(X_{\Sigma_M}\) can be obtained from \(X_{\Sigma_0}\) by a finite sequence of blowups.
-\end{remark}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section*{Acknowledgements}
 The author is grateful to his advisor, Yusuke Nakamura, for steady guidance and numerous insightful comments.
@@ -244,13 +245,19 @@ The author would also like to thank Kosuke Mizuno and Kentaro Tanaka for informa
    pages={381--452},
    note={\href{https://doi.org/10.4007/annals.2018.188.2.1}{DOI 10.4007/annals.2018.188.2.1}},
 }
-\bib{AP_23}{article}{
-  author={Amini, Omid},
-  author={Piquerez, Matthieu},
-  title={Hodge theory for tropical fans},
-  date={2023},
-  eprint={2310.15367v1},
-  status={to appear in Bull. Soc. Math. France},
+\bib{AP_20}{misc}{
+   author={Amini, Omid},
+   author={Piquerez, Matthieu},
+   title={Hodge theory for tropical varieties},
+   date={2020},
+   note={arXiv preprint, \href{https://arxiv.org/abs/2007.07826v1}{arXiv:2007.07826v1}},
+}
+\bib{AP_23}{misc}{
+   author={Amini, Omid},
+   author={Piquerez, Matthieu},
+   title={Hodge theory for tropical fans},
+   date={2023},
+   note={arXiv preprint, \href{https://arxiv.org/abs/2310.15367v1}{arXiv:2310.15367v1}},
 }
 \bib{BHMPBW_22}{article}{
    title={A semi-small decomposition of the Chow ring of a matroid},
