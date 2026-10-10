@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bergman Fan Viewer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <style>
+        body { margin: 0; overflow: hidden; background-color: #f8fafc; font-family: 'Inter', sans-serif; }
+        #canvas-container { width: 100vw; height: calc(100vh - 64px); }
+        .tab-btn { transition: all 0.2s ease; }
+        .tab-active { background-color: #f1f5f9; color: #334155; border: 2px solid #94a3b8; font-weight: 600; }
+        .tab-inactive { background-color: white; color: #64748b; border: 1px solid #cbd5e1; }
+        .tab-inactive:hover { background-color: #f8fafc; border-color: #94a3b8; }
+    </style>
+</head>
+<body class="flex flex-col h-screen">
+
+    <header class="h-16 bg-white shadow-sm flex items-center justify-center px-6 z-10 shrink-0">
+        <div class="flex space-x-4">
+            <button id="btn-model3" class="tab-btn tab-active px-6 py-2 rounded-md focus:outline-none text-lg font-serif tracking-wider" onclick="switchModel(3)">
+                Σ<sub><i>M</i><sub>3</sub></sub>
+            </button>
+            <button id="btn-model0" class="tab-btn tab-inactive px-6 py-2 rounded-md focus:outline-none text-lg font-serif tracking-wider" onclick="switchModel(0)">
+                Σ<sub>0</sub>
+            </button>
+            <button id="btn-model1" class="tab-btn tab-inactive px-6 py-2 rounded-md focus:outline-none text-lg font-serif tracking-wider" onclick="switchModel(1)">
+                Σ<sub><i>M</i><sub>3</sub> \ 3</sub>
+            </button>
+        </div>
+    </header>
+
+    <div class="relative flex-grow">
+        <div id="canvas-container" class="absolute inset-0"></div>
+        
+        <!-- Controls Overlay -->
+        <div id="camera-controls" class="absolute top-4 left-4 bg-white/90 backdrop-blur-sm p-4 rounded-lg shadow-md border border-slate-200">
+            <h2 class="text-sm font-semibold text-slate-700 mb-2">視点ショートカット</h2>
+            <div class="flex flex-col space-y-2">
+                <button id="btn-view-e3" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded text-xs font-medium transition-colors border border-slate-300">
+                    e_3 方向から見る (M3 \ 3 射影)
+                </button>
+                <button id="btn-view-e0" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded text-xs font-medium transition-colors border border-slate-300">
+                    e_0 方向から見る (縮退図)
+                </button>
+            </div>
+        </div>
+
+        <div class="absolute bottom-4 right-4 bg-white/90 backdrop-blur-sm p-4 rounded-lg shadow-md border border-slate-200 text-sm text-slate-600 pointer-events-none">
+            <ul class="space-y-1">
+                <li id="inst-rotate">左クリック + ドラッグ : 視点回転</li>
+                <li>右クリック + ドラッグ : 平行移動</li>
+                <li>スクロール : ズーム</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        const container = document.getElementById('canvas-container');
+        const scene = new THREE.Scene();
+        
+        // 数学的に正確な描写をするため、すべてのモデルで正投影(Orthographic)カメラを使用
+        const aspect = container.clientWidth / container.clientHeight;
+        const frustumSize = 9; // カメラの表示スケール
+        const camera = new THREE.OrthographicCamera(
+            frustumSize * aspect / -2, 
+            frustumSize * aspect / 2, 
+            frustumSize / 2, 
+            frustumSize / -2, 
+            -50, 
+            50
+        );
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setSize(container.clientWidth, container.clientHeight);
+        renderer.setPixelRatio(window.devicePixelRatio);
+        container.appendChild(renderer.domElement);
+
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+
+        const modelGroups = {
+            0: new THREE.Group(),
+            1: new THREE.Group(),
+            3: new THREE.Group()
+        };
+        scene.add(modelGroups[0]);
+        scene.add(modelGroups[1]);
+        scene.add(modelGroups[3]);
+
+        const lineColor = 0xe91e63; // ピンク
+        const surfaceColor = 0x94a3b8; // スレートブルー
+
+        function createTextSprite(text) {
+            const canvas = document.createElement('canvas');
+            canvas.width = 128;
+            canvas.height = 64;
+            const context = canvas.getContext('2d');
+            
+            context.clearRect(0, 0, canvas.width, canvas.height);
+            context.fillStyle = '#1e293b';
+            
+            // 下付き文字の解析処理
+            let baseText = text;
+            let subText = "";
+            const match = text.match(/^(.*)_\{?(.*?)\}?$/);
+            if (match) {
+                baseText = match[1];
+                subText = match[2];
+            } else if (text.includes('_')) {
+                const parts = text.split('_');
+                baseText = parts[0];
+                subText = parts[1];
+            }
+
+            context.font = 'italic 32px serif';
+            context.textAlign = 'center';
+            context.textBaseline = 'middle';
+            
+            if (subText) {
+                const baseWidth = context.measureText(baseText).width;
+                context.font = 'italic 20px serif';
+                const subWidth = context.measureText(subText).width;
+                
+                const totalWidth = baseWidth + subWidth;
+                const startX = (canvas.width - totalWidth) / 2;
+                
+                context.font = 'italic 32px serif';
+                context.textAlign = 'left';
+                context.fillText(baseText, startX, canvas.height / 2 - 4);
+                
+                context.font = 'italic 20px serif';
+                context.fillText(subText, startX + baseWidth, canvas.height / 2 + 10);
+            } else {
+                context.fillText(baseText, canvas.width / 2, canvas.height / 2);
+            }
+
+            const texture = new THREE.CanvasTexture(canvas);
+            const spriteMaterial = new THREE.SpriteMaterial({ map: texture, depthTest: false });
+            const sprite = new THREE.Sprite(spriteMaterial);
+            sprite.scale.set(1.5, 0.75, 1);
+            return sprite;
+        }
+
+        function createRay(direction, labelText) {
+            const group = new THREE.Group();
+            const length = direction.length();
+            
+            // 射線を円柱で表現
+            const cylinderGeo = new THREE.CylinderGeometry(0.04, 0.04, length, 8);
+            const cylinderMat = new THREE.MeshBasicMaterial({ color: lineColor });
+            const cylinder = new THREE.Mesh(cylinderGeo, cylinderMat);
+            
+            cylinder.position.copy(direction).multiplyScalar(0.5);
+            cylinder.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), direction.clone().normalize());
+            group.add(cylinder);
+
+            // ラベルの配置
+            const sprite = createTextSprite(labelText);
+            // 射線の先端から少し離した位置に配置
+            const offset = direction.clone().normalize().multiplyScalar(0.6);
+            sprite.position.copy(direction).add(offset);
+            group.add(sprite);
+
+            return group;
+        }
+
+        function createConeSurface(vec1, vec2) {
+            const group = new THREE.Group();
+            
+            // 面（半透明）
+            const geometry = new THREE.BufferGeometry();
+            const vertices = new Float32Array([
+                0, 0, 0,
+                vec1.x, vec1.y, vec1.z,
+                vec2.x, vec2.y, vec2.z
+            ]);
+            geometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
+            
+            const material = new THREE.MeshBasicMaterial({ 
+                color: surfaceColor, 
+                side: THREE.DoubleSide,
+                transparent: true,
+                opacity: 0.5,
+                depthWrite: false, // 透過時の描画順序問題を回避
+                blending: THREE.NormalBlending
+            });
+            group.add(new THREE.Mesh(geometry, material));
+
+            // 外枠のエッジ線（これがあることで扇の切り口が美しく見える）
+            const edgeGeo = new THREE.BufferGeometry().setFromPoints([vec1, vec2]);
+            const edgeMat = new THREE.LineBasicMaterial({ color: 0x475569, linewidth: 2 });
+            group.add(new THREE.Line(edgeGeo, edgeMat));
+
+            return group;
+        }
+
+        function buildModel3() {
+            // Sigma_{M3} (3D)
+            const group = modelGroups[3];
+            const L = 2.5; 
+            
+            // ベクトルは正規化せず、純粋な座標をスケーリングすることで平面の境界を真っ直ぐに保つ
+            const vectors = {
+                'e_1': new THREE.Vector3(1, 0, 0).multiplyScalar(L),
+                'e_2': new THREE.Vector3(0, 1, 0).multiplyScalar(L),
+                'e_3': new THREE.Vector3(0, 0, 1).multiplyScalar(L),
+                'e_0': new THREE.Vector3(-1, -1, -1).multiplyScalar(L),
+                
+                'e_{01}': new THREE.Vector3(0, -1, -1).multiplyScalar(L),
+                'e_{02}': new THREE.Vector3(-1, 0, -1).multiplyScalar(L),
+                'e_{03}': new THREE.Vector3(-1, -1, 0).multiplyScalar(L),
+                
+                'e_{123}': new THREE.Vector3(1, 1, 1).multiplyScalar(L)
+            };
+
+            for (const [label, vec] of Object.entries(vectors)) {
+                group.add(createRay(vec, label));
+            }
+
+            // M3 の9つの錐
+            const surfaces = [
+                ['e_1', 'e_{01}'], ['e_{01}', 'e_0'],
+                ['e_2', 'e_{02}'], ['e_{02}', 'e_0'],
+                ['e_3', 'e_{03}'], ['e_{03}', 'e_0'],
+                ['e_1', 'e_{123}'], ['e_2', 'e_{123}'], ['e_3', 'e_{123}']
+            ];
+
+            surfaces.forEach(pair => {
+                group.add(createConeSurface(vectors[pair[0]], vectors[pair[1]]));
+            });
+        }
+
+        function buildModel0() {
+            // Sigma_0 (Sigma_{M3} から e_{03} を削除し、e_3とe_0を直結)
+            const group = modelGroups[0];
+            const L = 2.5;
+            
+            const vectors = {
+                'e_1': new THREE.Vector3(1, 0, 0).multiplyScalar(L),
+                'e_2': new THREE.Vector3(0, 1, 0).multiplyScalar(L),
+                'e_3': new THREE.Vector3(0, 0, 1).multiplyScalar(L),
+                'e_0': new THREE.Vector3(-1, -1, -1).multiplyScalar(L),
+                
+                'e_{01}': new THREE.Vector3(0, -1, -1).multiplyScalar(L),
+                'e_{02}': new THREE.Vector3(-1, 0, -1).multiplyScalar(L),
+                
+                'e_{123}': new THREE.Vector3(1, 1, 1).multiplyScalar(L)
+            };
+
+            for (const [label, vec] of Object.entries(vectors)) {
+                group.add(createRay(vec, label));
+            }
+
+            // e_3 と e_0 が直結される
+            const surfaces = [
+                ['e_1', 'e_{01}'], ['e_{01}', 'e_0'],
+                ['e_2', 'e_{02}'], ['e_{02}', 'e_0'],
+                ['e_3', 'e_0'], // e_{03}がない
+                ['e_1', 'e_{123}'], ['e_2', 'e_{123}'], ['e_3', 'e_{123}']
+            ];
+
+            surfaces.forEach(pair => {
+                group.add(createConeSurface(vectors[pair[0]], vectors[pair[1]]));
+            });
+        }
+
+        function buildModel1() {
+            // Sigma_{M3 \ 3} (2D Flat)
+            // 座標を z=0 に制限して完全な平面図として構築
+            const group = modelGroups[1];
+            const L = 2.5;
+
+            const vectors = {
+                'e_1': new THREE.Vector3(1, 0, 0).multiplyScalar(L),
+                'e_2': new THREE.Vector3(0, 1, 0).multiplyScalar(L),
+                'e_0': new THREE.Vector3(-1, -1, 0).multiplyScalar(L),
+                'e_{12}': new THREE.Vector3(1, 1, 0).multiplyScalar(L),
+                'e_{01}': new THREE.Vector3(0, -1, 0).multiplyScalar(L),
+                'e_{02}': new THREE.Vector3(-1, 0, 0).multiplyScalar(L)
+            };
+
+            for (const [label, vec] of Object.entries(vectors)) {
+                group.add(createRay(vec, label));
+            }
+
+            // 正六角形を形成する錐
+            const surfaces = [
+                ['e_1', 'e_{12}'], ['e_{12}', 'e_2'],
+                ['e_2', 'e_{02}'], ['e_{02}', 'e_0'],
+                ['e_0', 'e_{01}'], ['e_{01}', 'e_1']
+            ];
+
+            surfaces.forEach(pair => {
+                group.add(createConeSurface(vectors[pair[0]], vectors[pair[1]]));
+            });
+        }
+
+        buildModel3();
+        buildModel0();
+        buildModel1();
+
+        function switchModel(modelId) {
+            modelGroups[0].visible = (modelId === 0);
+            modelGroups[1].visible = (modelId === 1);
+            modelGroups[3].visible = (modelId === 3);
+
+            // タブのスタイル更新
+            const tabIds = [3, 0, 1];
+            tabIds.forEach(id => {
+                const btn = document.getElementById(`btn-model${id}`);
+                if (id === modelId) {
+                    btn.classList.add('tab-active');
+                    btn.classList.remove('tab-inactive');
+                } else {
+                    btn.classList.add('tab-inactive');
+                    btn.classList.remove('tab-active');
+                }
+            });
+
+            const instRotate = document.getElementById('inst-rotate');
+            const cameraControls = document.getElementById('camera-controls');
+
+            if (modelId === 1) {
+                // 平面図(M3 \ 3)
+                camera.position.set(0, 0, 10);
+                camera.up.set(0, 1, 0);
+                camera.lookAt(0, 0, 0);
+                controls.target.set(0, 0, 0);
+                controls.enableRotate = false; // 回転無効化
+                
+                instRotate.classList.add('text-slate-400');
+                instRotate.textContent = '左クリック + ドラッグ : 視点回転 (固定中)';
+                cameraControls.classList.add('hidden'); // ショートカット非表示
+            } else {
+                // 3D図 (M3, Sigma0)
+                camera.position.set(6, 6, 6);
+                camera.up.set(0, 1, 0);
+                camera.lookAt(0, 0, 0);
+                controls.target.set(0, 0, 0);
+                controls.enableRotate = true; // 回転有効化
+                
+                instRotate.classList.remove('text-slate-400');
+                instRotate.textContent = '左クリック + ドラッグ : 視点回転';
+                cameraControls.classList.remove('hidden');
+            }
+            controls.update();
+        }
+
+        // 起動時の初期化
+        switchModel(3);
+
+        // e3 方向から見る (z軸正方向から原点を見る)
+        document.getElementById('btn-view-e3').addEventListener('click', () => {
+            camera.position.set(0, 0, 10);
+            camera.up.set(0, 1, 0);
+            controls.target.set(0, 0, 0);
+            controls.update();
+        });
+
+        // e0 方向から見る (対角線 -e0 方向から原点を見る)
+        // e2が上、e1が右を向くようにアップベクトルと位置を厳密に計算
+        document.getElementById('btn-view-e0').addEventListener('click', () => {
+            camera.position.set(10, 10, 10);
+            camera.up.set(-1, 2, -1).normalize();
+            controls.target.set(0, 0, 0);
+            controls.update();
+        });
+
+        // リサイズ対応
+        window.addEventListener('resize', () => {
+            const width = container.clientWidth;
+            const height = container.clientHeight;
+            const aspect = width / height;
+            
+            camera.left = frustumSize * aspect / -2;
+            camera.right = frustumSize * aspect / 2;
+            camera.top = frustumSize / 2;
+            camera.bottom = frustumSize / -2;
+            camera.updateProjectionMatrix();
+
+            renderer.setSize(width, height);
+        });
+
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+            
+            // スプライト(テキスト)が常にカメラを向くように調整
+            scene.traverse(function(child) {
+                if (child instanceof THREE.Sprite) {
+                    child.quaternion.copy(camera.quaternion);
+                }
+            });
+        }
+        
+        setTimeout(animate, 100);
+    </script>
+</body>
+</html>
