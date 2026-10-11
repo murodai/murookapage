@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bergman Fan Reference - A4 Material</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            /* A4 dimensions */
+            --a4-width: 210mm;
+            --a4-height: 297mm;
+        }
+        body { 
+            margin: 0; 
+            background-color: #cbd5e1; /* slaty background for web viewing */
+            display: flex; 
+            justify-content: center; 
+            align-items: center;
+            min-height: 100vh;
+            padding: 2rem;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+        /* A4 Page container */
+        .page-a4 {
+            width: var(--a4-width);
+            height: var(--a4-height);
+            background-color: #ffffff;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            padding: 20mm;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+        
+        /* Math formatting */
+        .math-normal { font-family: "Times New Roman", Times, serif; font-style: normal; }
+        .math-italic { font-family: "Times New Roman", Times, serif; font-style: italic; }
+        
+        /* Print rules to ensure it uses the full physical page */
+        @media print {
+            @page { size: A4; margin: 0; }
+            body { background-color: #ffffff; padding: 0; }
+            .page-a4 { box-shadow: none; width: 100%; height: 100%; padding: 15mm; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 操作パネル（印刷時は非表示 print:hidden） -->
+    <div class="fixed top-6 left-6 z-50 print:hidden flex flex-col gap-2">
+        <button onclick="window.setViewE3()" class="px-4 py-2 bg-white/90 backdrop-blur border border-slate-300 rounded shadow-sm text-sm text-slate-700 hover:bg-slate-50 transition-colors flex items-center cursor-pointer">
+            <span class="math-italic mr-1 text-lg">e</span><sub class="math-normal text-xs leading-none">3</sub> 方向から見る
+        </button>
+        <button onclick="window.setDefaultView()" class="px-4 py-2 bg-white/90 backdrop-blur border border-slate-300 rounded shadow-sm text-sm text-slate-700 hover:bg-slate-50 transition-colors flex items-center cursor-pointer">
+            デフォルト視点に戻す
+        </button>
+    </div>
+
+    <div class="page-a4 relative">
+        
+        <!-- Main Minimal Grid Layout -->
+        <div class="grid grid-cols-2 gap-x-8 gap-y-12 mt-4 w-full h-full content-start">
+            
+            <!-- Grid Item 1: Model 3 -->
+            <div class="flex flex-col items-center">
+                <h2 class="text-2xl text-black mb-2"><span class="math-normal">Σ</span><sub><span class="math-italic">M</span><sub class="math-normal">3</sub></sub></h2>
+                <div id="container-m3" class="w-full aspect-square relative"></div>
+            </div>
+
+            <!-- Grid Item 2: Model 0 -->
+            <div class="flex flex-col items-center">
+                <h2 class="text-2xl text-black mb-2"><span class="math-normal">Σ</span><sub class="math-normal">0</sub></h2>
+                <div id="container-m0" class="w-full aspect-square relative"></div>
+            </div>
+
+            <!-- Grid Item 3: Model 1 -->
+            <div class="flex flex-col items-center">
+                <h2 class="text-2xl text-black mb-2"><span class="math-normal">Σ</span><sub><span class="math-italic">M</span><sub class="math-normal">3</sub> \ 3</sub></h2>
+                <div id="container-m1" class="w-full aspect-square relative"></div>
+            </div>
+
+        </div>
+        
+        <!-- Modest QR Code -->
+        <div class="absolute bottom-[20mm] right-[20mm] z-50">
+            <img src="./QR_code.png" alt="QR Code" style="width: 15mm; height: 15mm; display: block;" onerror="this.onerror=null; this.src='https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=DummyQR';">
+        </div>
+
+    </div>
+
+    <script async src="https://unpkg.com/es-module-shims@1.6.3/dist/es-module-shims.js"></script>
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://unpkg.com/three@0.154.0/build/three.module.js",
+          "three/addons/": "https://unpkg.com/three@0.154.0/examples/jsm/"
+        }
+      }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+        // Configuration and Constants
+        const L = 3.0;
+        const PINK = 0xe91e63;
+        const BLUE = 0x3b82f6; 
+        const GRAY_FACE = 0x94a3b8;
+        const ORIGIN = new THREE.Vector3(0, 0, 0);
+        
+        // Exact vectors based on Cartesian coordinate system
+        const V = {
+            e1:   new THREE.Vector3(L, 0, 0),
+            e2:   new THREE.Vector3(0, L, 0),
+            e3:   new THREE.Vector3(0, 0, L),
+            e0:   new THREE.Vector3(-L, -L, -L),
+            e01:  new THREE.Vector3(0, -L, -L),
+            e02:  new THREE.Vector3(-L, 0, -L),
+            e03:  new THREE.Vector3(-L, -L, 0),
+            e123: new THREE.Vector3(L, L, L)
+        };
+
+        const activeViews = [];
+
+        function createFanScene(containerId, modelType) {
+            const container = document.getElementById(containerId);
+            const scene = new THREE.Scene();
+            scene.background = new THREE.Color('#ffffff');
+
+            // Orthographic Camera
+            const width = container.clientWidth;
+            const height = container.clientHeight;
+            const aspect = width / height;
+            const viewSize = 6.0; // Adjusted to prevent clipping of vertices/labels
+            
+            const camera = new THREE.OrthographicCamera(
+                -viewSize * aspect, viewSize * aspect, 
+                viewSize, -viewSize, 
+                0.1, 1000
+            );
+
+            // Renderer
+            const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(width, height);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            container.appendChild(renderer.domElement);
+
+            // Controls
+            const controls = new OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            controls.enableZoom = false; // Disable zoom to keep layout clean on scroll
+
+            // Materials
+            const faceMaterial = new THREE.MeshBasicMaterial({ 
+                color: GRAY_FACE, 
+                side: THREE.DoubleSide, 
+                transparent: true, 
+                opacity: 0.4, 
+                depthWrite: false
+            });
+            const edgeMaterial = new THREE.LineBasicMaterial({ color: 0x475569, transparent: true, opacity: 0.6 });
+
+            // Geometry Helpers
+            function createThickLine(v1, v2, color = PINK) {
+                const path = new THREE.LineCurve3(v1, v2);
+                const geometry = new THREE.TubeGeometry(path, 1, 0.1, 8, false); // slightly thicker for small screens
+                const material = new THREE.MeshBasicMaterial({ color: color });
+                return new THREE.Mesh(geometry, material);
+            }
+
+            function createFace(v1, v2, v3) {
+                const group = new THREE.Group();
+                const geometry = new THREE.BufferGeometry().setFromPoints([v1, v2, v3]);
+                geometry.computeVertexNormals();
+                
+                const mesh = new THREE.Mesh(geometry, faceMaterial);
+                group.add(mesh);
+
+                const edges = new THREE.EdgesGeometry(geometry);
+                const line = new THREE.LineSegments(edges, edgeMaterial);
+                group.add(line);
+
+                return group;
+            }
+
+            function createTextSprite(text) {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                canvas.width = 256;
+                canvas.height = 128;
+                
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = '#1e293b'; 
+                ctx.textAlign = 'left';
+                ctx.textBaseline = 'alphabetic';
+
+                let baseText = text;
+                let subText = '';
+                if (text.includes('_')) {
+                    const parts = text.split('_');
+                    baseText = parts[0];
+                    subText = parts[1].replace(/[{}]/g, ''); 
+                }
+
+                const startX = 64;
+                const startY = 80;
+
+                ctx.font = 'italic 55px "Times New Roman", Times, serif';
+                ctx.fillText(baseText, startX, startY);
+                let baseWidth = ctx.measureText(baseText).width;
+
+                if (subText) {
+                    ctx.font = '40px "Times New Roman", Times, serif';
+                    ctx.fillText(subText, startX + baseWidth, startY + 15);
+                }
+
+                const texture = new THREE.CanvasTexture(canvas);
+                texture.minFilter = THREE.LinearFilter;
+                const spriteMaterial = new THREE.SpriteMaterial({ map: texture, depthTest: false });
+                const sprite = new THREE.Sprite(spriteMaterial);
+                sprite.scale.set(3.5, 1.75, 1); // Scaled up slightly for readability
+                return sprite;
+            }
+
+            function addVector(group, v, label, color = PINK) {
+                const line = createThickLine(ORIGIN, v, color);
+                group.add(line);
+                
+                const sprite = createTextSprite(label);
+                // Reduced the scalar slightly so labels don't push outside the view boundary
+                const labelPos = v.clone().multiplyScalar(1.15); 
+                sprite.position.copy(labelPos);
+                group.add(sprite);
+            }
+
+            const modelGroup = new THREE.Group();
+
+            if (modelType === 3) {
+                // Model 3 (Σ_{M3})
+                modelGroup.add(createFace(ORIGIN, V.e1, V.e123));
+                modelGroup.add(createFace(ORIGIN, V.e2, V.e123));
+                modelGroup.add(createFace(ORIGIN, V.e3, V.e123));
+                modelGroup.add(createFace(ORIGIN, V.e0, V.e01));
+                modelGroup.add(createFace(ORIGIN, V.e1, V.e01));
+                modelGroup.add(createFace(ORIGIN, V.e0, V.e02));
+                modelGroup.add(createFace(ORIGIN, V.e2, V.e02));
+                modelGroup.add(createFace(ORIGIN, V.e0, V.e03));
+                modelGroup.add(createFace(ORIGIN, V.e3, V.e03));
+
+                addVector(modelGroup, V.e1, 'e_1');
+                addVector(modelGroup, V.e2, 'e_2');
+                addVector(modelGroup, V.e3, 'e_3');
+                addVector(modelGroup, V.e0, 'e_0');
+                addVector(modelGroup, V.e123, 'e_{123}');
+                addVector(modelGroup, V.e01, 'e_{01}');
+                addVector(modelGroup, V.e02, 'e_{02}');
+                addVector(modelGroup, V.e03, 'e_{03}', BLUE);
+                
+                camera.position.set(-14, 10, 22);
+                controls.enableRotate = true;
+
+            } else if (modelType === 0) {
+                // Model 0 (Σ_0)
+                modelGroup.add(createFace(ORIGIN, V.e1, V.e123));
+                modelGroup.add(createFace(ORIGIN, V.e2, V.e123));
+                modelGroup.add(createFace(ORIGIN, V.e3, V.e123));
+                modelGroup.add(createFace(ORIGIN, V.e0, V.e01));
+                modelGroup.add(createFace(ORIGIN, V.e1, V.e01));
+                modelGroup.add(createFace(ORIGIN, V.e0, V.e02));
+                modelGroup.add(createFace(ORIGIN, V.e2, V.e02));
+                modelGroup.add(createFace(ORIGIN, V.e0, V.e3)); // Direct face
+
+                addVector(modelGroup, V.e1, 'e_1');
+                addVector(modelGroup, V.e2, 'e_2');
+                addVector(modelGroup, V.e3, 'e_3');
+                addVector(modelGroup, V.e0, 'e_0');
+                addVector(modelGroup, V.e123, 'e_{123}');
+                addVector(modelGroup, V.e01, 'e_{01}');
+                addVector(modelGroup, V.e02, 'e_{02}');
+                
+                camera.position.set(-14, 10, 22);
+                controls.enableRotate = true;
+
+            } else if (modelType === 1) {
+                // Model 1 (Σ_{M3 \ 3}) - 2D Projection
+                const V1 = {
+                    e1:  new THREE.Vector3(L, 0, 0),
+                    e12: new THREE.Vector3(L, L, 0),
+                    e2:  new THREE.Vector3(0, L, 0),
+                    e02: new THREE.Vector3(-L, 0, 0),
+                    e0:  new THREE.Vector3(-L, -L, 0),
+                    e01: new THREE.Vector3(0, -L, 0)
+                };
+
+                modelGroup.add(createFace(ORIGIN, V1.e1, V1.e12));
+                modelGroup.add(createFace(ORIGIN, V1.e12, V1.e2));
+                modelGroup.add(createFace(ORIGIN, V1.e2, V1.e02));
+                modelGroup.add(createFace(ORIGIN, V1.e02, V1.e0));
+                modelGroup.add(createFace(ORIGIN, V1.e0, V1.e01));
+                modelGroup.add(createFace(ORIGIN, V1.e01, V1.e1));
+
+                addVector(modelGroup, V1.e1, 'e_1');
+                addVector(modelGroup, V1.e12, 'e_{12}');
+                addVector(modelGroup, V1.e2, 'e_2');
+                addVector(modelGroup, V1.e02, 'e_{02}');
+                addVector(modelGroup, V1.e0, 'e_0');
+                addVector(modelGroup, V1.e01, 'e_{01}');
+
+                camera.position.set(0, 0, 15);
+                controls.enableRotate = false; // Lock rotation for 2D diagram
+            }
+
+            scene.add(modelGroup);
+            controls.target.set(0, 0, 0);
+            controls.update();
+
+            activeViews.push({ scene, camera, renderer, controls, container, viewSize, modelType });
+        }
+
+        function init() {
+            createFanScene('container-m3', 3);
+            createFanScene('container-m0', 0);
+            createFanScene('container-m1', 1);
+
+            // Handle resize dynamically to preserve exact Aspect Ratio for Print/Web
+            const resizeObserver = new ResizeObserver(entries => {
+                for (let entry of entries) {
+                    const { width, height } = entry.contentRect;
+                    const view = activeViews.find(v => v.container === entry.target);
+                    if (view) {
+                        const aspect = width / height;
+                        view.camera.left = -view.viewSize * aspect;
+                        view.camera.right = view.viewSize * aspect;
+                        view.camera.top = view.viewSize;
+                        view.camera.bottom = -view.viewSize;
+                        view.camera.updateProjectionMatrix();
+                        view.renderer.setSize(width, height);
+                    }
+                }
+            });
+
+            activeViews.forEach(view => resizeObserver.observe(view.container));
+            animate();
+        }
+
+        // 視点変更機能（グローバル関数として公開）
+        window.setViewE3 = function() {
+            activeViews.forEach(view => {
+                // 上2つの扇（Model 3 と Model 0）のみ視点を変更
+                if (view.modelType === 3 || view.modelType === 0) {
+                    view.camera.position.set(0, 0, 20);
+                    view.camera.up.set(0, 1, 0);
+                    view.controls.update();
+                }
+            });
+        };
+
+        window.setDefaultView = function() {
+            activeViews.forEach(view => {
+                if (view.modelType === 3 || view.modelType === 0) {
+                    view.camera.position.set(-14, 10, 22);
+                    view.camera.up.set(0, 1, 0);
+                    view.controls.update();
+                }
+            });
+        };
+
+        function animate() {
+            requestAnimationFrame(animate);
+            activeViews.forEach(view => {
+                view.controls.update();
+                view.renderer.render(view.scene, view.camera);
+            });
+        }
+
+        // Delay slightly to ensure fonts/containers are ready
+        setTimeout(init, 100);
+
+    </script>
+</body>
+</html>
