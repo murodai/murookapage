@@ -2,10 +2,15 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=860">
     <title>Bergman Fan Reference - A4 Material</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
+        /* スマホでの自動的な文字サイズ拡大を防止 */
+        html {
+            -webkit-text-size-adjust: none;
+            text-size-adjust: none;
+        }
         :root {
             /* A4 dimensions */
             --a4-width: 210mm;
@@ -65,27 +70,27 @@
             
             <!-- Grid Item 1: Model 3 -->
             <div class="flex flex-col items-center">
-                <h2 class="text-2xl text-black mb-2"><span class="math-normal">Σ</span><sub><span class="math-italic">M</span><sub class="math-normal">3</sub></sub></h2>
                 <div id="container-m3" class="w-full aspect-square relative"></div>
+                <h2 class="text-2xl text-black mt-2"><span class="math-normal">Σ</span><sub><span class="math-italic">M</span><sub class="math-normal">3</sub></sub></h2>
             </div>
 
             <!-- Grid Item 2: Model 0 -->
             <div class="flex flex-col items-center">
-                <h2 class="text-2xl text-black mb-2"><span class="math-normal">Σ</span><sub class="math-normal">0</sub></h2>
                 <div id="container-m0" class="w-full aspect-square relative"></div>
+                <h2 class="text-2xl text-black mt-2"><span class="math-normal">Σ</span><sub class="math-normal">0</sub></h2>
             </div>
 
             <!-- Grid Item 3: Model 1 -->
             <div class="flex flex-col items-center">
-                <h2 class="text-2xl text-black mb-2"><span class="math-normal">Σ</span><sub><span class="math-italic">M</span><sub class="math-normal">3</sub> \ 3</sub></h2>
                 <div id="container-m1" class="w-full aspect-square relative"></div>
+                <h2 class="text-2xl text-black mt-2"><span class="math-normal">Σ</span><sub><span class="math-italic">M</span><sub class="math-normal">3</sub> \ 3</sub></h2>
             </div>
 
         </div>
         
         <!-- Modest QR Code -->
         <div class="absolute bottom-[20mm] right-[20mm] z-50">
-            <img src="./QR_code.png" alt="QR Code" style="width: 15mm; height: 15mm; display: block;" onerror="this.onerror=null; this.src='https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=DummyQR';">
+            <img src="./QR_code.png" alt="QR Code" style="width: 18mm; height: 18mm; display: block;" onerror="this.onerror=null; this.src='https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=DummyQR';">
         </div>
 
     </div>
@@ -222,17 +227,20 @@
                 texture.minFilter = THREE.LinearFilter;
                 const spriteMaterial = new THREE.SpriteMaterial({ map: texture, depthTest: false });
                 const sprite = new THREE.Sprite(spriteMaterial);
-                sprite.scale.set(3.5, 1.75, 1); // Scaled up slightly for readability
+                sprite.scale.set(2.5, 1.25, 1); 
                 return sprite;
             }
 
-            function addVector(group, v, label, color = PINK) {
+            function addVector(group, v, label, color = PINK, offsetX = 0, offsetY = 0, offsetZ = 0) {
                 const line = createThickLine(ORIGIN, v, color);
                 group.add(line);
                 
                 const sprite = createTextSprite(label);
                 // Reduced the scalar slightly so labels don't push outside the view boundary
                 const labelPos = v.clone().multiplyScalar(1.15); 
+                labelPos.x += offsetX;
+                labelPos.y += offsetY;
+                labelPos.z += offsetZ;
                 sprite.position.copy(labelPos);
                 group.add(sprite);
             }
@@ -251,7 +259,8 @@
                 modelGroup.add(createFace(ORIGIN, V.e0, V.e03));
                 modelGroup.add(createFace(ORIGIN, V.e3, V.e03));
 
-                addVector(modelGroup, V.e1, 'e_1');
+                // e_1 が図や線に被らないよう、自然な位置に微調整
+                addVector(modelGroup, V.e1, 'e_1', PINK, 0.6, -0.4, 0.4);
                 addVector(modelGroup, V.e2, 'e_2');
                 addVector(modelGroup, V.e3, 'e_3');
                 addVector(modelGroup, V.e0, 'e_0');
@@ -274,7 +283,8 @@
                 modelGroup.add(createFace(ORIGIN, V.e2, V.e02));
                 modelGroup.add(createFace(ORIGIN, V.e0, V.e3)); // Direct face
 
-                addVector(modelGroup, V.e1, 'e_1');
+                // e_1 が図や線に被らないよう、自然な位置に微調整
+                addVector(modelGroup, V.e1, 'e_1', PINK, 0.6, -0.4, 0.4);
                 addVector(modelGroup, V.e2, 'e_2');
                 addVector(modelGroup, V.e3, 'e_3');
                 addVector(modelGroup, V.e0, 'e_0');
@@ -303,7 +313,8 @@
                 modelGroup.add(createFace(ORIGIN, V1.e0, V1.e01));
                 modelGroup.add(createFace(ORIGIN, V1.e01, V1.e1));
 
-                addVector(modelGroup, V1.e1, 'e_1');
+                // e_1 が図や線に被らないよう、自然な位置に微調整
+                addVector(modelGroup, V1.e1, 'e_1', PINK, 0.6, -0.4, 0);
                 addVector(modelGroup, V1.e12, 'e_{12}');
                 addVector(modelGroup, V1.e2, 'e_2');
                 addVector(modelGroup, V1.e02, 'e_{02}');
