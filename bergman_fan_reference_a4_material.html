@@ -58,6 +58,9 @@
         <button onclick="window.setViewE3()" class="px-4 py-2 bg-white/90 backdrop-blur border border-slate-300 rounded shadow-sm text-sm text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer text-left">
             <span class="math-italic text-lg">e</span><sub class="math-normal text-[0.65rem] ml-0.5 mr-1">3</sub> View
         </button>
+        <button onclick="window.setViewE0()" class="px-4 py-2 bg-white/90 backdrop-blur border border-slate-300 rounded shadow-sm text-sm text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer text-left">
+            <span class="math-italic text-lg">e</span><sub class="math-normal text-[0.65rem] ml-0.5 mr-1">0</sub> View
+        </button>
         <button onclick="window.setDefaultView()" class="px-4 py-2 bg-white/90 backdrop-blur border border-slate-300 rounded shadow-sm text-sm text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer text-left">
             Default View
         </button>
@@ -65,8 +68,34 @@
 
     <div class="page-a4 relative">
         
+        <!-- Sequence Formula -->
+        <div class="w-full text-center mt-2 mb-6 pointer-events-none">
+            <h1 class="text-[1.75rem] text-black flex items-center justify-center gap-4">
+                <span class="flex items-baseline">
+                    <span class="math-normal">Σ</span><sub><span class="math-italic">M</span><sub class="math-normal">3</sub></sub>
+                </span>
+                <span class="math-normal mx-2 inline-block transform scale-x-[1.5]">=</span>
+                <span class="flex items-baseline">
+                    <span class="math-normal">Σ</span><sup class="math-normal text-xl">(1)</sup>
+                </span>
+                <span class="mx-2 inline-block transform -translate-y-1">⟶</span> 
+                <span class="flex items-baseline">
+                    <span class="math-normal">Σ</span><sup class="math-normal text-xl">(0)</sup>
+                </span>
+                <span class="mx-3 relative inline-block transform -translate-y-1">
+                    <span class="absolute left-1/2 transform -translate-x-1/2 -top-2.5 flex items-baseline text-[1.2rem] text-black">
+                        <span class="math-italic">&pi;</span><sub class="math-normal text-[0.75rem]">0</sub>
+                    </span>
+                    ⟶
+                </span> 
+                <span class="flex items-baseline">
+                    <span class="math-normal">Σ</span><sub><span class="math-italic">M</span><sub class="math-normal">3</sub> \ 3</sub>
+                </span>
+            </h1>
+        </div>
+
         <!-- Main Minimal Grid Layout -->
-        <div class="grid grid-cols-2 gap-x-8 gap-y-12 mt-4 w-full h-full content-start">
+        <div class="grid grid-cols-2 gap-x-8 gap-y-12 w-full h-full content-start">
             
             <!-- Grid Item 1: Model 3 -->
             <div class="flex flex-col items-center">
@@ -77,22 +106,26 @@
             <!-- Grid Item 2: Model 0 -->
             <div class="flex flex-col items-center">
                 <div id="container-m0" class="w-full aspect-square relative"></div>
-                <h2 class="text-2xl text-black -mt-8 relative z-10 pointer-events-none"><span class="math-normal">Σ</span><sub class="math-normal">0</sub></h2>
+                <h2 class="text-2xl text-black -mt-8 relative z-10 pointer-events-none"><span class="math-normal">Σ</span><sup class="math-normal text-lg">(0)</sup></h2>
             </div>
 
             <!-- Grid Item 3: Model 1 -->
-            <div class="flex flex-col items-center">
-                <div id="container-m1" class="w-full aspect-square relative"></div>
-                <h2 class="text-2xl text-black -mt-8 relative z-10 pointer-events-none"><span class="math-normal">Σ</span><sub><span class="math-italic">M</span><sub class="math-normal">3</sub> \ 3</sub></h2>
+            <div class="flex flex-col items-center relative z-10">
+                <div id="container-m1" class="w-full aspect-square relative z-0"></div>
+                <h2 class="text-2xl text-black -mt-8 relative z-20 pointer-events-none"><span class="math-normal">Σ</span><sub><span class="math-italic">M</span><sub class="math-normal">3</sub> \ 3</sub></h2>
+            </div>
+
+            <!-- Grid Item 4: Model 2 (Σ_{M3 \ 0}) -->
+            <div class="flex flex-col items-center relative z-10">
+                <!-- 破線の仕切り（絶対配置でキャンバスサイズに影響を与えずに配置） -->
+                <div class="absolute -top-6 -bottom-12 -left-4 w-[110%] border-t-[3px] border-l-[3px] border-dashed border-slate-400 pointer-events-none"></div>
+                
+                <div id="container-m2" class="w-full aspect-square relative z-0"></div>
+                <h2 class="text-2xl text-black -mt-8 relative z-20 pointer-events-none"><span class="math-normal">Σ</span><sub><span class="math-italic">M</span><sub class="math-normal">3</sub> \ 0</sub></h2>
             </div>
 
         </div>
         
-        <!-- Modest QR Code -->
-        <div class="absolute bottom-[20mm] right-[20mm] z-50">
-            <img src="./QR_code.png" alt="QR Code" style="width: 18mm; height: 18mm; display: block;" onerror="this.onerror=null; this.src='https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=DummyQR';">
-        </div>
-
     </div>
 
     <script async src="https://unpkg.com/es-module-shims@1.6.3/dist/es-module-shims.js"></script>
@@ -107,7 +140,7 @@
 
     <script type="module">
         import * as THREE from 'three';
-        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { TrackballControls } from 'three/addons/controls/TrackballControls.js';
 
         // Configuration and Constants
         const L = 3.0;
@@ -153,11 +186,11 @@
             renderer.setPixelRatio(window.devicePixelRatio);
             container.appendChild(renderer.domElement);
 
-            // Controls
-            const controls = new OrbitControls(camera, renderer.domElement);
-            controls.enableDamping = true;
-            controls.dampingFactor = 0.05;
-            controls.enableZoom = false; // Disable zoom to keep layout clean on scroll
+            // Controls (TrackballControls allows free 360-degree rotation across poles)
+            const controls = new TrackballControls(camera, renderer.domElement);
+            controls.noZoom = true;
+            controls.noPan = true;
+            controls.rotateSpeed = 3.0;
 
             // Materials
             const faceMaterial = new THREE.MeshBasicMaterial({ 
@@ -273,7 +306,7 @@
                 addVector(modelGroup, V.e03, 'e_{03}', BLUE);
                 
                 camera.position.set(-14, 10, 22);
-                controls.enableRotate = true;
+                controls.noRotate = false;
 
             } else if (modelType === 0) {
                 // Model 0 (Σ_0)
@@ -295,7 +328,7 @@
                 addVector(modelGroup, V.e02, 'e_{02}');
                 
                 camera.position.set(-14, 10, 22);
-                controls.enableRotate = true;
+                controls.noRotate = false;
 
             } else if (modelType === 1) {
                 // Model 1 (Σ_{M3 \ 3}) - 2D Projection
@@ -320,10 +353,26 @@
                 addVector(modelGroup, V1.e2, 'e_2');
                 addVector(modelGroup, V1.e02, 'e_{02}');
                 addVector(modelGroup, V1.e0, 'e_0');
-                addVector(modelGroup, V1.e01, 'e_{01}');
+                addVector(modelGroup, V1.e01, 'e_{01}', PINK, 0.6, -0.4, 0);
 
                 camera.position.set(0, 0, 15);
-                controls.enableRotate = false; // Lock rotation for 2D diagram
+                controls.noRotate = true; // Lock rotation for 2D diagram
+
+            } else if (modelType === 2) {
+                // Model 2 (Σ_{M3 \ 0}) - 1D Fan (3 rays: e1, e2, e3)
+                const V2 = {
+                    e1:  new THREE.Vector3(L, 0, 0),
+                    e2:  new THREE.Vector3(0, L, 0),
+                    e3:  new THREE.Vector3(-L, -L, 0)
+                };
+
+                // 面(Face)の描画は行わず、3本のベクトルのみを描画
+                addVector(modelGroup, V2.e1, 'e_1', PINK, 0.6, -0.4, 0);
+                addVector(modelGroup, V2.e2, 'e_2');
+                addVector(modelGroup, V2.e3, 'e_3', PINK, -0.2, -0.6, 0);
+
+                camera.position.set(0, 0, 15);
+                controls.noRotate = true; // Lock rotation for 2D diagram
             }
 
             scene.add(modelGroup);
@@ -337,6 +386,7 @@
             createFanScene('container-m3', 3);
             createFanScene('container-m0', 0);
             createFanScene('container-m1', 1);
+            createFanScene('container-m2', 2);
 
             // Handle resize dynamically to preserve exact Aspect Ratio for Print/Web
             const resizeObserver = new ResizeObserver(entries => {
@@ -351,6 +401,7 @@
                         view.camera.bottom = -view.viewSize;
                         view.camera.updateProjectionMatrix();
                         view.renderer.setSize(width, height);
+                        view.controls.handleResize();
                     }
                 }
             });
@@ -366,6 +417,16 @@
                 if (view.modelType === 3 || view.modelType === 0) {
                     view.camera.position.set(0, 0, 20);
                     view.camera.up.set(0, 1, 0);
+                    view.controls.update();
+                }
+            });
+        };
+
+        window.setViewE0 = function() {
+            activeViews.forEach(view => {
+                if (view.modelType === 3 || view.modelType === 0) {
+                    view.camera.position.set(-20, -20, -20);
+                    view.camera.up.set(1, 2, 1).normalize();
                     view.controls.update();
                 }
             });
