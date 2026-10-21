@@ -36,10 +36,47 @@
 このサイトについて：<br>
 私の論文と講演歴を記録しています。
 </p>
-<p>
-<a href="https://www.kankomie.or.jp/spot/22372"><img src="images/Mt_tado.jpg" width="350" alt="多度山の写真"></a><br>
-多度山上公園（５月）
-</p>
+<style>
+  #record-btn {
+    cursor: pointer;
+    display: inline-block;
+    width: 120px;
+    transition: transform 0.2s;
+    filter: drop-shadow(2px 4px 4px rgba(0,0,0,0.4));
+  }
+  #record-btn:hover {
+    transform: scale(1.05);
+  }
+</style>
+
+<div style="margin: 20px 0;">
+  <div id="record-btn" title="BGMを再生/停止">
+    <img id="gramophone-img" src="./images/gramophone_static.png" alt="蓄音機" style="width: 50%; height: auto; image-rendering: pixelated;">
+  </div><br>
+  <span style="font-size: 16px;">本日の名盤：ヴェネツィアとナポリ「タランテラ」</span>
+  <audio id="bgm-player" src="./music/music.mp3" loop></audio>
+</div>
+
+<script>
+  const recordBtn = document.getElementById('record-btn');
+  const gramophoneImg = document.getElementById('gramophone-img');
+  const bgmPlayer = document.getElementById('bgm-player');
+  let isPlaying = false;
+  
+  const staticImgSrc = "./images/gramophone_static.png";
+  const animatedGifSrc = "./images/gramophone_animated.gif";
+
+  recordBtn.addEventListener('click', function() {
+    if (isPlaying) {
+      bgmPlayer.pause();
+      gramophoneImg.src = staticImgSrc; 
+    } else {
+      bgmPlayer.play().catch(error => console.error("再生エラー:", error));
+      gramophoneImg.src = animatedGifSrc + "?t=" + new Date().getTime(); 
+    }
+    isPlaying = !isPlaying;
+  });
+</script>
 <br>
 <p>
 <img src="./images/icons/hp.png" width="22" alt="HP">
